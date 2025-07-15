@@ -26,12 +26,28 @@ services:
     networks:
       - media-network
 
-  collabora:
-    image: collabora/code:latest
-    container_name: collabora
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
+    volumes:
+      - ~/srv/docker/gluetun:/gluetun
     environment:
-      - aliasgroup1=docker-server
-      - extra_params=--o:ssl.enable=false --o:ssl.termination=true
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
+      - VPN_TYPE=${VPN_TYPE}
+      - VPN_PORT_FORWARDING=on
+      - PORT_FORWARD_ONLY=on
+      - SERVER_COUNTRIES=${PROTONVPN_SERVER_COUNTRIES}
+      - SERVER_CITIES=${PROTONVPN_SERVER_CITIES}
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - TZ=America/Los_Angeles
     restart: unless-stopped
     networks:
       - media-network
@@ -84,6 +100,8 @@ services:
       - ~/srv/docker/nextcloud/config:/config
       - /mnt/storage_pool/nextcloud:/data
     restart: unless-stopped
+    ports:
+      - 443:443
     networks:
       - media-network
 
@@ -122,7 +140,7 @@ services:
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
-    network_mode: "host"
+    network_mode: "service:gluetun"
     environment:
       - PUID=1000
       - PGID=1000
@@ -137,6 +155,8 @@ services:
   qbit_manage:
     container_name: qbit_manage
     image: ghcr.io/stuffanthings/qbit_manage:latest
+    depends_on:
+      - gluetun
     volumes:
       - ~/srv/docker/qbit_manage/config:/config:rw
       - /mnt/storage_pool:/data:rw
