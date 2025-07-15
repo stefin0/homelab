@@ -1,0 +1,206 @@
+services:
+  byparr:
+    image: ghcr.io/thephaseless/byparr:latest
+    container_name: byparr
+    shm_size: 2gb
+    ports:
+      - "8191:8191"
+    restart: unless-stopped
+    networks:
+      - media-network
+
+  calibre-web-automated:
+    image: crocodilestick/calibre-web-automated:latest
+    container_name: calibre-web-automated
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ~/srv/docker/calibre-web-automated/config:/config 
+      - /mnt/storage_pool/Books/cwa-book-ingest:/cwa-book-ingest
+      - /mnt/storage_pool/Books/calibre-library:/calibre-library 
+    ports:
+      - 8083:8083
+    restart: unless-stopped
+    networks:
+      - media-network
+
+  collabora:
+    image: collabora/code:latest
+    container_name: collabora
+    environment:
+      - aliasgroup1=docker-server
+      - extra_params=--o:ssl.enable=false --o:ssl.termination=true
+    restart: unless-stopped
+    networks:
+      - media-network
+
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ~/srv/docker/jellyfin/config:/config
+      - /mnt/storage_pool:/data
+    ports:
+      - "8096:8096"
+    restart: unless-stopped
+    networks:
+      - media-network
+
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+      - LOG_LEVEL=info
+    volumes:
+      - ~/srv/docker/jellyseerr/config:/app/config
+    ports:
+      - "5055:5055"
+    restart: unless-stopped
+    depends_on:
+      - sonarr
+      - radarr
+    networks:
+      - media-network
+
+  nextcloud:
+    image: lscr.io/linuxserver/nextcloud:latest
+    container_name: nextcloud
+    depends_on:
+      - nextcloud-db
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ~/srv/docker/nextcloud/config:/config
+      - /mnt/storage_pool/nextcloud:/data
+    restart: unless-stopped
+    networks:
+      - media-network
+
+  nextcloud-db:
+    image: lscr.io/linuxserver/mariadb:latest
+    container_name: nextcloud-db
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+      - MYSQL_ROOT_PASSWORD=${NEXTCLOUD_DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${NEXTCLOUD_DB_NAME}
+      - MYSQL_USER=${NEXTCLOUD_DB_USERNAME}
+      - MYSQL_PASSWORD=${NEXTCLOUD_DB_USER_PASSWORD}
+    volumes:
+      - ~/srv/docker/nextcloud-db/config:/config
+    restart: unless-stopped
+    networks:
+      - media-network
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ~/srv/docker/prowlarr/config:/config
+    ports:
+      - "9696:9696"
+    restart: unless-stopped
+    networks:
+      - media-network
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    network_mode: "host"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+      - WEBUI_PORT=8080
+    volumes:
+      - ~/srv/docker/qbittorrent/config:/config
+      - ~/srv/docker/qbittorrent/downloading:/downloading
+      - /mnt/storage_pool:/data
+    restart: unless-stopped
+
+  qbit_manage:
+    container_name: qbit_manage
+    image: ghcr.io/stuffanthings/qbit_manage:latest
+    volumes:
+      - ~/srv/docker/qbit_manage/config:/config:rw
+      - /mnt/storage_pool:/data:rw
+    environment:
+      # Scheduler Configuration
+      - QBT_RUN=false
+      - QBT_SCHEDULE=1440
+      - QBT_CONFIG=/config/config.yml
+      - QBT_LOGFILE=activity.log
+      # Command Flags
+      - QBT_RECHECK=false
+      - QBT_CAT_UPDATE=false
+      - QBT_TAG_UPDATE=false
+      - QBT_REM_UNREGISTERED=false
+      - QBT_REM_ORPHANED=false
+      - QBT_TAG_TRACKER_ERROR=false
+      - QBT_TAG_NOHARDLINKS=true
+      - QBT_SHARE_LIMITS=true
+      - QBT_SKIP_CLEANUP=false
+      - QBT_DRY_RUN=false
+      # Logging Configuration
+      - QBT_LOG_LEVEL=INFO
+      - QBT_DIVIDER==
+      - QBT_WIDTH=100
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ~/srv/docker/radarr/config:/config
+      - /mnt/storage_pool:/data
+    ports:
+      - "7878:7878"
+    restart: unless-stopped
+    depends_on:
+      - qbittorrent
+      - prowlarr
+    networks:
+      - media-network
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Los_Angeles
+    volumes:
+      - ~/srv/docker/sonarr/config:/config
+      - /mnt/storage_pool:/data
+    ports:
+      - "8989:8989"
+    restart: unless-stopped
+    depends_on:
+      - qbittorrent
+      - prowlarr
+    networks:
+      - media-network
+
+networks:
+  media-network:
+    driver: bridge
