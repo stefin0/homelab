@@ -3,8 +3,6 @@ services:
     image: ghcr.io/thephaseless/byparr:latest
     container_name: byparr
     shm_size: 2gb
-    ports:
-      - "8191:8191"
     restart: unless-stopped
     networks:
       - media-network
@@ -13,16 +11,21 @@ services:
     image: crocodilestick/calibre-web-automated:latest
     container_name: calibre-web-automated
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TZ=America/Los_Angeles
     volumes:
-      - ~/srv/docker/calibre-web-automated/config:/config 
+      - ./calibre-web-automated/config:/config 
       - /mnt/storage_pool/Books/cwa-book-ingest:/cwa-book-ingest
       - /mnt/storage_pool/Books/calibre-library:/calibre-library 
-    ports:
-      - 8083:8083
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cwa.rule=Host(`cwa.hlrf.freeddns.org`)"
+      - "traefik.http.routers.cwa.entrypoints=websecure"
+      - "traefik.http.routers.cwa.tls.certresolver=myresolver"
+      - "traefik.http.services.cwa.loadbalancer.server.port=8083"
+      - "traefik.http.services.cwa.loadbalancer.server.scheme=http"
     networks:
       - media-network
 
@@ -38,7 +41,7 @@ services:
       - 6881:6881
       - 6881:6881/udp
     volumes:
-      - ~/srv/docker/gluetun:/gluetun
+      - ./gluetun:/gluetun
     environment:
       - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
       - VPN_TYPE=${VPN_TYPE}
@@ -48,6 +51,7 @@ services:
       - SERVER_CITIES=${PROTONVPN_SERVER_CITIES}
       - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
       - TZ=America/Los_Angeles
+      - VPN_PORT_FORWARDING_UP_COMMAND=/bin/sh -c 'wget -O- --post-data "json={\"listen_port\":{{PORTS}}}" http://127.0.0.1:8080/api/v2/app/setPreferences'
     restart: unless-stopped
     networks:
       - media-network
@@ -56,15 +60,20 @@ services:
     image: lscr.io/linuxserver/jellyfin:latest
     container_name: jellyfin
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TZ=America/Los_Angeles
     volumes:
-      - ~/srv/docker/jellyfin/config:/config
+      - ./jellyfin/config:/config
       - /mnt/storage_pool:/data
-    ports:
-      - "8096:8096"
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.hlrf.freeddns.org`)"
+      - "traefik.http.routers.jellyfin.entrypoints=websecure"
+      - "traefik.http.routers.jellyfin.tls.certresolver=myresolver"
+      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
+      - "traefik.http.services.jellyfin.loadbalancer.server.scheme=http"
     networks:
       - media-network
 
@@ -72,18 +81,23 @@ services:
     image: fallenbagel/jellyseerr:latest
     container_name: jellyseerr
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TZ=America/Los_Angeles
       - LOG_LEVEL=info
     volumes:
-      - ~/srv/docker/jellyseerr/config:/app/config
-    ports:
-      - "5055:5055"
+      - ./jellyseerr/config:/app/config
     restart: unless-stopped
     depends_on:
-      - sonarr
       - radarr
+      - sonarr
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.hlrf.freeddns.org`)"
+      - "traefik.http.routers.jellyseerr.entrypoints=websecure"
+      - "traefik.http.routers.jellyseerr.tls.certresolver=myresolver"
+      - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
+      - "traefik.http.services.jellyseerr.loadbalancer.server.scheme=http"
     networks:
       - media-network
 
@@ -93,31 +107,58 @@ services:
     depends_on:
       - nextcloud-db
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TZ=America/Los_Angeles
     volumes:
-      - ~/srv/docker/nextcloud/config:/config
+      - ./nextcloud/config:/config
       - /mnt/storage_pool/nextcloud:/data
     restart: unless-stopped
-    ports:
-      - 443:443
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nextcloud.rule=Host(`nextcloud.hlrf.freeddns.org`)"
+      - "traefik.http.routers.nextcloud.entrypoints=websecure"
+      - "traefik.http.routers.nextcloud.tls.certresolver=myresolver"
+      - "traefik.http.services.nextcloud.loadbalancer.server.port=80"
+      - "traefik.http.services.nextcloud.loadbalancer.server.scheme=http"
     networks:
       - media-network
+      - nextcloud-internal
 
   nextcloud-db:
     image: lscr.io/linuxserver/mariadb:latest
     container_name: nextcloud-db
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TZ=America/Los_Angeles
       - MYSQL_ROOT_PASSWORD=${NEXTCLOUD_DB_ROOT_PASSWORD}
       - MYSQL_DATABASE=${NEXTCLOUD_DB_NAME}
       - MYSQL_USER=${NEXTCLOUD_DB_USERNAME}
       - MYSQL_PASSWORD=${NEXTCLOUD_DB_USER_PASSWORD}
     volumes:
-      - ~/srv/docker/nextcloud-db/config:/config
+      - ./nextcloud-db/config:/config
+    restart: unless-stopped
+    networks:
+      - nextcloud-internal
+
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "8088:80/tcp"
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=America/Los_Angeles
+      - FTLCONF_webserver_api_password=${FTLCONF_WEBSERVER_API_PASSWORD}
+    volumes:
+      - ./pihole/etc/pihole:/etc/pihole
+      - ./pihole/etc/dnsmasq.d:/etc/dnsmasq.d
+    cap_add:
+      - NET_ADMIN
     restart: unless-stopped
     networks:
       - media-network
@@ -126,39 +167,46 @@ services:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowlarr
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TZ=America/Los_Angeles
     volumes:
-      - ~/srv/docker/prowlarr/config:/config
-    ports:
-      - "9696:9696"
+      - ./prowlarr/config:/config
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prowlarr.rule=Host(`prowlarr.hlrf.freeddns.org`)"
+      - "traefik.http.routers.prowlarr.entrypoints=websecure"
+      - "traefik.http.routers.prowlarr.tls.certresolver=myresolver"
+      - "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
+      - "traefik.http.services.prowlarr.loadbalancer.server.scheme=http"
     networks:
       - media-network
 
   qbittorrent:
     image: lscr.io/linuxserver/qbittorrent:latest
     container_name: qbittorrent
-    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TZ=America/Los_Angeles
       - WEBUI_PORT=8080
     volumes:
-      - ~/srv/docker/qbittorrent/config:/config
-      - ~/srv/docker/qbittorrent/downloading:/downloading
+      - ./qbittorrent/config:/config
+      - ./qbittorrent/downloading:/downloading
       - /mnt/storage_pool:/data
     restart: unless-stopped
+    network_mode: "service:gluetun"
 
   qbit_manage:
-    container_name: qbit_manage
     image: ghcr.io/stuffanthings/qbit_manage:latest
+    container_name: qbit_manage
     depends_on:
       - gluetun
     volumes:
-      - ~/srv/docker/qbit_manage/config:/config:rw
+      - ./qbit_manage/config:/config:rw
       - /mnt/storage_pool:/data:rw
     environment:
       # Scheduler Configuration
@@ -182,23 +230,29 @@ services:
       - QBT_DIVIDER==
       - QBT_WIDTH=100
     restart: unless-stopped
+    network_mode: "service:gluetun"
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TZ=America/Los_Angeles
     volumes:
-      - ~/srv/docker/radarr/config:/config
+      - ./radarr/config:/config
       - /mnt/storage_pool:/data
-    ports:
-      - "7878:7878"
     restart: unless-stopped
     depends_on:
       - qbittorrent
       - prowlarr
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.radarr.rule=Host(`radarr.hlrf.freeddns.org`)"
+      - "traefik.http.routers.radarr.entrypoints=websecure"
+      - "traefik.http.routers.radarr.tls.certresolver=myresolver"
+      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
+      - "traefik.http.services.radarr.loadbalancer.server.scheme=http"
     networks:
       - media-network
 
@@ -206,21 +260,79 @@ services:
     image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TZ=America/Los_Angeles
     volumes:
-      - ~/srv/docker/sonarr/config:/config
+      - ./sonarr/config:/config
       - /mnt/storage_pool:/data
-    ports:
-      - "8989:8989"
     restart: unless-stopped
     depends_on:
       - qbittorrent
       - prowlarr
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sonarr.rule=Host(`sonarr.hlrf.freeddns.org`)"
+      - "traefik.http.routers.sonarr.entrypoints=websecure"
+      - "traefik.http.routers.sonarr.tls.certresolver=myresolver"
+      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
+      - "traefik.http.services.sonarr.loadbalancer.server.scheme=http"
+    networks:
+      - media-network
+
+  stirling-pdf:
+    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest
+    container_name: stirling-pdf
+    environment:
+      - LANGS=en_US
+      - DISABLE_ADDITIONAL_FEATURES=false
+    volumes:
+      - ./stirling-pdf/trainingData:/usr/share/tessdata
+      - ./stirling-pdf/extraConfigs:/configs
+      - ./stirling-pdf/customFiles:/customFiles/
+      - ./stirling-pdf/logs:/logs/
+      - ./stirling-pdf/pipeline:/pipeline/
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.stirlingpdf.rule=Host(`pdf.hlrf.freeddns.org`)"
+      - "traefik.http.routers.stirlingpdf.entrypoints=websecure"
+      - "traefik.http.routers.stirlingpdf.tls.certresolver=myresolver"
+      - "traefik.http.services.stirlingpdf.loadbalancer.server.port=8080"
+      - "traefik.http.services.stirlingpdf.loadbalancer.server.scheme=http"
+    networks:
+      - media-network
+
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.provider=dynu"
+      - "--certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.myresolver.acme.storage=/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8089:8080"
+    environment:
+      - DYNU_API_KEY=${DYNU_API_KEY}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/acme.json:/acme.json 
+    restart: unless-stopped
     networks:
       - media-network
 
 networks:
   media-network:
     driver: bridge
+  nextcloud-internal:
+    internal: true
