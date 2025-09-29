@@ -1,4 +1,26 @@
-*
-!docker-compose.yml
-!README.md
-!.gitignore
+*.env
+.env
+
+# Gluetun
+media/gluetun/servers.json
+
+# Pi-hole
+pihole/pihole/etc/
+
+# qBittorrent
+media/qbittorrent/downloading/
+
+# Traefik
+acme.json
+
+# Ignore personal data
+config/
+data/
+db/
+pgdata/
+postgres/
+library/
+
+# Logs
+*.log
+.DS_Store

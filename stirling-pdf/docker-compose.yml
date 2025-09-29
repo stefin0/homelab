@@ -1,0 +1,27 @@
+services:
+  stirling-pdf:
+    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:latest
+    container_name: stirling-pdf
+    environment:
+      - LANGS=${LANGS}
+      - DISABLE_ADDITIONAL_FEATURES=false
+    volumes:
+      - ./data/trainingData:/usr/share/tessdata
+      - ./data/extraConfigs:/configs
+      - ./data/customFiles:/customFiles/
+      - ./data/logs:/logs/
+      - ./data/pipeline:/pipeline/
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.stirlingpdf.rule=Host(`pdf.${DOMAIN}`)"
+      - "traefik.http.routers.stirlingpdf.entrypoints=websecure"
+      - "traefik.http.routers.stirlingpdf.tls.certresolver=myresolver"
+      - "traefik.http.services.stirlingpdf.loadbalancer.server.port=8080"
+      - "traefik.http.services.stirlingpdf.loadbalancer.server.scheme=http"
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    external: true

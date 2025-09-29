@@ -1,0 +1,26 @@
+services:
+  calibre-web-automated:
+    image: crocodilestick/calibre-web-automated:latest
+    container_name: calibre-web-automated
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ./config:/config
+      - /mnt/storage_pool/Books/cwa-book-ingest:/cwa-book-ingest
+      - /mnt/storage_pool/Books/calibre-library:/calibre-library
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.cwa.rule=Host(`cwa.${DOMAIN}`)"
+      - "traefik.http.routers.cwa.entrypoints=websecure"
+      - "traefik.http.routers.cwa.tls.certresolver=myresolver"
+      - "traefik.http.services.cwa.loadbalancer.server.port=8083"
+      - "traefik.http.services.cwa.loadbalancer.server.scheme=http"
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    external: true

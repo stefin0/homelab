@@ -1,0 +1,171 @@
+services:
+  byparr:
+    image: ghcr.io/thephaseless/byparr:latest
+    container_name: byparr
+    shm_size: 2gb
+    restart: unless-stopped
+    networks:
+      - homelab
+
+  gluetun:
+    image: qmcgaw/gluetun
+    container_name: gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - 8080:8080
+      - 6881:6881
+      - 6881:6881/udp
+    volumes:
+      - ./gluetun:/gluetun
+    env_file:
+      - .env
+    environment:
+      - VPN_SERVICE_PROVIDER=${VPN_SERVICE_PROVIDER}
+      - VPN_TYPE=${VPN_TYPE}
+      - VPN_PORT_FORWARDING=on
+      - PORT_FORWARD_ONLY=on
+      - SERVER_COUNTRIES=${PROTONVPN_SERVER_COUNTRIES}
+      - SERVER_CITIES=${PROTONVPN_SERVER_CITIES}
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - TZ=${TZ}
+      - VPN_PORT_FORWARDING_UP_COMMAND=/bin/sh -c 'wget -O- --post-data "json={\"listen_port\":{{PORTS}}}" http://127.0.0.1:8080/api/v2/app/setPreferences'
+    restart: unless-stopped
+    networks:
+      - homelab
+
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      - LOG_LEVEL=info
+      - TZ=${TZ}
+    volumes:
+      - ./jellyseerr/config:/app/config
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jellyseerr.rule=Host(`jellyseerr.${DOMAIN}`)"
+      - "traefik.http.routers.jellyseerr.entrypoints=websecure"
+      - "traefik.http.routers.jellyseerr.tls.certresolver=myresolver"
+      - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
+      - "traefik.http.services.jellyseerr.loadbalancer.server.scheme=http"
+    networks:
+      - homelab
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ./prowlarr/config:/config
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prowlarr.rule=Host(`prowlarr.${DOMAIN}`)"
+      - "traefik.http.routers.prowlarr.entrypoints=websecure"
+      - "traefik.http.routers.prowlarr.tls.certresolver=myresolver"
+      - "traefik.http.services.prowlarr.loadbalancer.server.port=9696"
+      - "traefik.http.services.prowlarr.loadbalancer.server.scheme=http"
+    networks:
+      - homelab
+
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    depends_on:
+      - gluetun
+    environment:
+      - WEBUI_PORT=8080
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ./qbittorrent/config:/config
+      - ./qbittorrent/downloading:/downloading
+      - /mnt/storage_pool:/data
+    restart: unless-stopped
+    network_mode: "service:gluetun"
+
+  qbit_manage:
+    image: ghcr.io/stuffanthings/qbit_manage:latest
+    container_name: qbit_manage
+    depends_on:
+      - gluetun
+    volumes:
+      - ./qbit_manage/config:/config:rw
+      - /mnt/storage_pool:/data:rw
+    environment:
+      # Scheduler Configuration
+      - QBT_RUN=false
+      - QBT_SCHEDULE=1440
+      - QBT_CONFIG=/config/config.yml
+      - QBT_LOGFILE=activity.log
+      # Command Flags
+      - QBT_RECHECK=false
+      - QBT_CAT_UPDATE=false
+      - QBT_TAG_UPDATE=false
+      - QBT_REM_UNREGISTERED=false
+      - QBT_REM_ORPHANED=false
+      - QBT_TAG_TRACKER_ERROR=false
+      - QBT_TAG_NOHARDLINKS=true
+      - QBT_SHARE_LIMITS=true
+      - QBT_SKIP_CLEANUP=false
+      - QBT_DRY_RUN=false
+      # Logging Configuration
+      - QBT_LOG_LEVEL=INFO
+      - QBT_DIVIDER==
+      - QBT_WIDTH=100
+    restart: unless-stopped
+    network_mode: "service:gluetun"
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ./radarr/config:/config
+      - /mnt/storage_pool:/data
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.radarr.rule=Host(`radarr.${DOMAIN}`)"
+      - "traefik.http.routers.radarr.entrypoints=websecure"
+      - "traefik.http.routers.radarr.tls.certresolver=myresolver"
+      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
+      - "traefik.http.services.radarr.loadbalancer.server.scheme=http"
+    networks:
+      - homelab
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ./sonarr/config:/config
+      - /mnt/storage_pool:/data
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sonarr.rule=Host(`sonarr.${DOMAIN}`)"
+      - "traefik.http.routers.sonarr.entrypoints=websecure"
+      - "traefik.http.routers.sonarr.tls.certresolver=myresolver"
+      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
+      - "traefik.http.services.sonarr.loadbalancer.server.scheme=http"
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    external: true

@@ -1,0 +1,27 @@
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    env_file:
+      - ../.env
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ./config:/config
+      - /mnt/storage_pool:/data
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.${DOMAIN}`)"
+      - "traefik.http.routers.jellyfin.entrypoints=websecure"
+      - "traefik.http.routers.jellyfin.tls.certresolver=myresolver"
+      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
+      - "traefik.http.services.jellyfin.loadbalancer.server.scheme=http"
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    external: true

@@ -1,0 +1,49 @@
+services:
+  nextcloud:
+    image: lscr.io/linuxserver/nextcloud:latest
+    container_name: nextcloud
+    depends_on:
+      - nextcloud-db
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ./nextcloud/config:/config
+      - /mnt/storage_pool/nextcloud:/data
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nextcloud.rule=Host(`nextcloud.${DOMAIN}`)"
+      - "traefik.http.routers.nextcloud.entrypoints=websecure"
+      - "traefik.http.routers.nextcloud.tls.certresolver=myresolver"
+      - "traefik.http.services.nextcloud.loadbalancer.server.port=80"
+      - "traefik.http.services.nextcloud.loadbalancer.server.scheme=http"
+    networks:
+      - homelab
+      - nextcloud-internal
+
+  nextcloud-db:
+    image: lscr.io/linuxserver/mariadb:latest
+    container_name: nextcloud-db
+    env_file:
+      - .env
+    environment:
+      - MYSQL_ROOT_PASSWORD=${NEXTCLOUD_DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${NEXTCLOUD_DB_NAME}
+      - MYSQL_USER=${NEXTCLOUD_DB_USERNAME}
+      - MYSQL_PASSWORD=${NEXTCLOUD_DB_USER_PASSWORD}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ./nextcloud-db/config:/config
+    restart: unless-stopped
+    networks:
+      - nextcloud-internal
+
+networks:
+  homelab:
+    external: true
+  nextcloud-internal:
+    internal: true

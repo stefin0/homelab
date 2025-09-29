@@ -1,0 +1,34 @@
+services:
+  traefik:
+    image: traefik:latest
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.provider=dynu"
+      - "--certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.myresolver.acme.storage=/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8089:8080"
+    env_file:
+      - .env
+    environment:
+      - DYNU_API_KEY=${DYNU_API_KEY}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./acme.json:/acme.json
+    restart: unless-stopped
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    external: true
