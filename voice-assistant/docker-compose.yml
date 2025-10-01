@@ -1,0 +1,30 @@
+services:
+  piper:
+    image: rhasspy/wyoming-piper
+    container_name: piper
+    command:
+      - --voice
+      - en_US-lessac-medium
+    volumes:
+      - ./piper/config:/config
+    restart: unless-stopped
+    networks:
+      - homelab
+
+  faster-whisper:
+    image: lscr.io/linuxserver/faster-whisper:latest
+    container_name: faster-whisper
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - WHISPER_MODEL=tiny-int8
+    volumes:
+      - ./faster-whisper/config:/config
+    restart: unless-stopped
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    external: true
