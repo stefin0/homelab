@@ -1,0 +1,30 @@
+services:
+  otbr:
+    image: openthread/border-router:latest
+    privileged: true
+    restart: always
+    container_name: otbr
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - OT_RCP_DEVICE=spinel+hdlc+uart:///dev/ttyUSB0?uart-baudrate=460800
+      - OT_INFRA_IF=enp2s0
+      - OT_THREAD_IF=wpan0
+      - OT_REST_LISTEN_ADDR=0.0.0.0
+      - OT_REST_LISTEN_PORT=8081
+      - OT_LOG_LEVEL=7
+    devices:
+      - /dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_484fc339f411f011b33f0714773d9da9-if00-port0:/dev/ttyUSB0
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - /var/lib/otbr:/data/
+    network_mode: host
+
+  matter-server:
+    image: ghcr.io/home-assistant-libs/python-matter-server:stable
+    container_name: matter-server
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ./matter-server/data:/data
+      - /run/dbus:/run/dbus:ro
