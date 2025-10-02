@@ -11,7 +11,7 @@
 | Jellyfin | [LinuxServer.io](https://docs.linuxserver.io/images/docker-jellyfin/) |
 | Jellyseerr | [Site](https://docs.jellyseerr.dev/getting-started/docker) |
 | MariaDB (Nextcloud DB) | [LinuxServer.io](https://docs.linuxserver.io/images/docker-mariadb/) |
-| Matter Server | [Github](https://github.com/orgs/home-assistant-libs/packages/container/package/python-matter-server) |
+| Matter Server | [Github](https://github.com/matter-js/python-matter-server/blob/main/docs/docker.md) |
 | Nextcloud | [LinuxServer.io](https://docs.linuxserver.io/images/docker-nextcloud/) |
 | Ollama | [Docker Hub](https://hub.docker.com/r/ollama/ollama) |
 | Open Thread Border Router | [Site](https://openthread.io/guides/border-router/build-docker) |

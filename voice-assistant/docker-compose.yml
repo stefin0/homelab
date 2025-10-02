@@ -7,6 +7,8 @@ services:
       - en_US-lessac-medium
     volumes:
       - ./piper/config:/config
+    ports:
+      - 10200:10200
     restart: unless-stopped
     networks:
       - homelab
@@ -21,6 +23,8 @@ services:
       - WHISPER_MODEL=tiny-int8
     volumes:
       - ./faster-whisper/config:/config
+    ports:
+      - 10300:10300
     restart: unless-stopped
     networks:
       - homelab
