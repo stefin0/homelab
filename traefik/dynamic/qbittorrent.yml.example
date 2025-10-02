@@ -1,0 +1,15 @@
+http:
+  routers:
+    qbittorrent:
+      rule: "Host(`qbittorrent.{DOMAIN}`)"
+      entryPoints:
+        - "websecure"
+      service: "qbittorrent"
+      tls:
+        certResolver: "myresolver"
+
+  services:
+    qbittorrent:
+      loadBalancer:
+        servers:
+          - url: "http://{IP_ADDRESS}:8080"

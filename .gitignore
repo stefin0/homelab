@@ -12,6 +12,8 @@ media/qbittorrent/downloading/
 
 # Traefik
 acme.json
+traefik/dynamic/*
+!traefik/dynamic/*.example
 
 # Ignore personal data
 config/
