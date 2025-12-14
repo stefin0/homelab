@@ -4,6 +4,7 @@ services:
     container_name: nextcloud
     depends_on:
       - nextcloud-db
+      - nextcloud-redis
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -16,9 +17,9 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.nextcloud.rule=Host(`nextcloud.${DOMAIN}`)"
       - "traefik.http.routers.nextcloud.entrypoints=websecure"
-      - "traefik.http.routers.nextcloud.tls.certresolver=myresolver"
       - "traefik.http.services.nextcloud.loadbalancer.server.port=80"
       - "traefik.http.services.nextcloud.loadbalancer.server.scheme=http"
+      - "traefik.docker.network=homelab"
     networks:
       - homelab
       - nextcloud-internal
@@ -38,6 +39,13 @@ services:
       - TZ=${TZ}
     volumes:
       - ./nextcloud-db/config:/config
+    restart: unless-stopped
+    networks:
+      - nextcloud-internal
+
+  nextcloud-redis:
+    image: redis:alpine
+    container_name: nextcloud-redis
     restart: unless-stopped
     networks:
       - nextcloud-internal

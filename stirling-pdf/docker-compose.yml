@@ -16,7 +16,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.stirlingpdf.rule=Host(`pdf.${DOMAIN}`)"
       - "traefik.http.routers.stirlingpdf.entrypoints=websecure"
-      - "traefik.http.routers.stirlingpdf.tls.certresolver=myresolver"
       - "traefik.http.services.stirlingpdf.loadbalancer.server.port=8080"
       - "traefik.http.services.stirlingpdf.loadbalancer.server.scheme=http"
     networks:

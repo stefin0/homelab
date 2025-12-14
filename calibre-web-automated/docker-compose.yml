@@ -15,7 +15,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.cwa.rule=Host(`cwa.${DOMAIN}`)"
       - "traefik.http.routers.cwa.entrypoints=websecure"
-      - "traefik.http.routers.cwa.tls.certresolver=myresolver"
       - "traefik.http.services.cwa.loadbalancer.server.port=8083"
       - "traefik.http.services.cwa.loadbalancer.server.scheme=http"
     networks:
