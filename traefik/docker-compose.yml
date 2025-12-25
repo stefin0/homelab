@@ -19,6 +19,9 @@ services:
       - "--entrypoints.websecure.http.tls.certresolver=myresolver"
       - "--entrypoints.websecure.http.tls.domains[0].main=${DOMAIN}"
       - "--entrypoints.websecure.http.tls.domains[0].sans=*.${DOMAIN}"
+      - "--entrypoints.websecure.transport.respondingTimeouts.readTimeout=0"
+      - "--entrypoints.websecure.transport.respondingTimeouts.writeTimeout=0"
+      - "--entrypoints.websecure.transport.respondingTimeouts.idleTimeout=0"
     ports:
       - "80:80"
       - "443:443"
