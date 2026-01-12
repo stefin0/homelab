@@ -1,0 +1,24 @@
+services:
+  actual_server:
+    image: docker.io/actualbudget/actual-server:latest
+    volumes:
+      - ./actual-data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'node src/scripts/health-check.js']
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.actual.rule=Host(`actual.${DOMAIN}`)"
+      - "traefik.http.routers.actual.entrypoints=websecure"
+      - "traefik.http.services.actual.loadbalancer.server.port=5006"
+      - "traefik.http.services.actual.loadbalancer.server.scheme=http"
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    external: true

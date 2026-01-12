@@ -1,6 +1,9 @@
 *.env
 .env
 
+# Actual Budget
+actual/actual-data/
+
 # Gluetun
 media/gluetun/servers.json
 

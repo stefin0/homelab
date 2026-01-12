@@ -4,6 +4,7 @@
 
 | Tool/Service | Link |
 |---|---|
+| Actual Budget | [Site](https://actualbudget.org/docs/install/docker/) |
 | Byparr | [GitHub](https://github.com/ThePhaseless/Byparr) |
 | Calibre-Web-Automated | [Github](https://github.com/crocodilestick/Calibre-Web-Automated) |
 | Gluetun (ProtonVPN) | [GitHub](https://github.com/qdm12/gluetun-wiki/blob/main/setup/providers/protonvpn.md) |
