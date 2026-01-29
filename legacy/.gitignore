@@ -1,0 +1,31 @@
+*.env
+.env
+
+# Actual Budget
+actual/actual-data/
+
+# Gluetun
+media/gluetun/servers.json
+
+# Pi-hole
+pihole/pihole/etc/
+
+# qBittorrent
+media/qbittorrent/downloading/
+
+# Traefik
+acme.json
+traefik/dynamic/*
+!traefik/dynamic/*.example
+
+# Ignore personal data
+config/
+data/
+db/
+pgdata/
+postgres/
+library/
+
+# Logs
+*.log
+.DS_Store

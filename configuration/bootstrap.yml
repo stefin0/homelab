@@ -1,0 +1,8 @@
+- name: Bootstrap Proxmox Host
+  hosts: all
+  become: true
+
+  roles:
+    - role: proxmox_bootstrap
+      vars:
+        force_token_rotation: true

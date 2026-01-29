@@ -1,0 +1,20 @@
+vms = {
+  "infra-core-01" = {
+    id        = 101
+    cores     = 2
+    memory    = 2048
+    disk_size = 20
+    ip_cidr   = "192.168.68.5/24"
+    gateway   = "192.168.68.1"
+    tags      = ["infra", "prod"]
+  }
+  "docker-host-01" = {
+    id        = 102
+    cores     = 4
+    memory    = 4096
+    disk_size = 20
+    ip_cidr   = "192.168.68.10/24"
+    gateway   = "192.168.68.1"
+    tags      = ["docker", "media"]
+  }
+}

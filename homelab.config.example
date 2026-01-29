@@ -1,0 +1,13 @@
+# --- Network & Hardware (Environment) ---
+PROXMOX_HOST="192.168.68.201"
+PROXMOX_URL="https://${PROXMOX_HOST}:8006/api2/json"
+TARGET_NODE="proxmox"
+
+# --- Globals ---
+TEMPLATE_ID="9000"
+SSH_KEY_PATH="$HOME/.ssh/id_ed25519.pub"
+
+ISO_URL="https://releases.ubuntu.com/24.04/ubuntu-24.04.3-live-server-amd64.iso"
+ISO_CHECKSUM="sha256:c3514bf0056180d09376462a7a1b4f213c1d6e8ea67fae5c25099c6fd3d8274b"
+
+VM_PASSWORD="password"

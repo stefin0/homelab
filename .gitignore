@@ -1,31 +1,13 @@
-*.env
+# --- Security & Secrets ---
 .env
 
-# Actual Budget
-actual/actual-data/
+# --- General ---
+homelab.config
 
-# Gluetun
-media/gluetun/servers.json
+# --- Packer ---
+variables.auto.pkrvars.hcl
 
-# Pi-hole
-pihole/pihole/etc/
-
-# qBittorrent
-media/qbittorrent/downloading/
-
-# Traefik
-acme.json
-traefik/dynamic/*
-!traefik/dynamic/*.example
-
-# Ignore personal data
-config/
-data/
-db/
-pgdata/
-postgres/
-library/
-
-# Logs
-*.log
-.DS_Store
+# --- Terraform ---
+.terraform/
+*tfstate*
+variables.auto.tfvars

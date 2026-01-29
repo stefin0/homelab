@@ -1,0 +1,114 @@
+# --- System Hardening & Access ---
+- name: Ensure SSH key is present for root
+  ansible.posix.authorized_key:
+    user: root
+    state: present
+    key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+  tags: [access]
+
+- name: Get 'local' storage configuration
+  command: pvesh get /storage/local --output-format json
+  register: storage_config
+  changed_when: false
+  check_mode: false
+  tags: [storage]
+
+- name: Enable snippets on local storage
+  command: pvesm set local --content backup,iso,vztmpl,snippets
+  changed_when: true
+  when: "'snippets' not in (storage_config.stdout | from_json).content"
+  tags: [storage]
+
+# --- User Management ---
+- name: Create Provisioning User (System Level)
+  user:
+    name: "{{ provision_user }}"
+    groups: sudo
+    shell: /bin/bash
+    state: present
+  tags: [user]
+
+- name: Check if Proxmox user exists
+  command: "pveum user list --output-format json"
+  register: pve_users
+  changed_when: false
+  check_mode: false
+  tags: [user]
+
+- name: Create Provisioning User (Proxmox Level)
+  command: "pveum user add {{ provision_user }}@pam --comment 'IaC Provisioning User'"
+  changed_when: true
+  when: "(pve_users.stdout | from_json | selectattr('userid', 'equalto', provision_user + '@pam') | list | length) == 0"
+  tags: [user]
+
+- name: Check existing ACLs
+  command: "pvesh get /access/acl --output-format json"
+  register: pve_acls
+  changed_when: false
+  check_mode: false
+  tags: [user]
+
+- name: Grant Admin Privileges
+  command: "pveum acl modify / -user {{ provision_user }}@pam -role Administrator"
+  changed_when: true
+  when: >
+    (pve_acls.stdout | from_json
+    | selectattr('ugid', 'equalto', provision_user + '@pam')
+    | selectattr('path', 'equalto', '/')
+    | selectattr('roleid', 'equalto', 'Administrator')
+    | list | length) == 0
+  tags: [user]
+
+# --- Secrete Management ---
+- name: Check for existing API Token
+  command: "pveum user token list {{ provision_user }}@pam --output-format json"
+  register: pve_tokens
+  changed_when: false
+  failed_when: false
+  tags: [secrets]
+
+- name: Determine if token rotation is needed
+  set_fact:
+    rotate_token: "{{ force_token_rotation or (pve_tokens.stdout | from_json | selectattr('tokenid', 'equalto', 'automation') | list | length) == 0 }}"
+  tags: [secrets]
+
+- name: Rotate API Token
+  when: rotate_token
+  tags: [secrets]
+  block:
+    - name: Remove existing token (if rotation requested)
+      command: "pveum user token delete {{ provision_user }}@pam automation"
+      changed_when: true
+      when: "(pve_tokens.stdout | from_json | selectattr('tokenid', 'equalto', 'automation') | list | length) > 0"
+
+    - name: Generate new API Token
+      command: "pveum user token add {{ provision_user }}@pam automation --privsep 0 --output-format json"
+      register: new_token
+      no_log: true
+      changed_when: true
+
+    - name: Save API Token to .env
+      delegate_to: localhost
+      become: false
+      copy:
+        content: |
+          export PROXMOX_API_TOKEN_ID="{{ provision_user }}@pam!automation"
+          export PROXMOX_API_TOKEN_SECRET="{{ (new_token.stdout | from_json).value }}"
+        dest: "{{ playbook_dir }}/../.env"
+        mode: "0600"
+      when: rotate_token
+
+- name: Display Token Status
+  debug:
+    msg: "Token already exists and force_token_rotation is false. Skipping regeneration."
+  when: not rotate_token
+  tags: [secrets]
+
+# --- ISO Management ---
+- name: Download Ubuntu ISO
+  ansible.builtin.get_url:
+    url: "{{ iso_url }}"
+    dest: "/var/lib/vz/template/iso/{{ iso_filename }}"
+    checksum: "{{ iso_checksum }}"
+    mode: "0644"
+  tags: [iso]
