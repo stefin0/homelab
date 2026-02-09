@@ -1,3 +1,0 @@
-provision_user: "terraform-prov"
-provision_group: "automation"
-force_token_rotation: false

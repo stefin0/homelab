@@ -1,4 +1,5 @@
 #cloud-config
+# docs: https://canonical-subiquity.readthedocs-hosted.com/en/latest/reference/autoinstall-reference.html
 autoinstall:
   version: 1
   locale: en_US.UTF-8
@@ -18,11 +19,11 @@ autoinstall:
   identity:
     hostname: ubuntu-template
     username: ubuntu
-    password: ${password_hash}
+    password: ${vm_password_hash}
   ssh:
     install-server: true
     authorized-keys:
-      - ${ssh_key}
+      - ${ssh_public_key}
   packages:
     - qemu-guest-agent
     - sudo

@@ -1,7 +1,8 @@
+# docs: https://registry.terraform.io/providers/bpg/proxmox/latest/docs/resources/virtual_environment_vm
 resource "proxmox_virtual_environment_vm" "nodes" {
   for_each = var.vms
 
-  node_name = var.target_node
+  node_name = var.node_name
   vm_id     = each.value.id
 
   name        = each.key
@@ -13,13 +14,12 @@ resource "proxmox_virtual_environment_vm" "nodes" {
   machine = "q35"
 
   efi_disk {
-    datastore_id = "local-lvm"
+    datastore_id = var.storage_pool
     file_format  = "raw"
     type         = "4m"
-
   }
 
-  # --- Cloning from Packet Template ---
+  # Cloning from Packer Template
   clone {
     vm_id = var.template_vm_id
     full  = true
@@ -29,7 +29,7 @@ resource "proxmox_virtual_environment_vm" "nodes" {
     enabled = true
   }
 
-  # --- Compute Resources ---
+  # Compute Resources
   cpu {
     cores = each.value.cores
     type  = "host"
@@ -40,14 +40,27 @@ resource "proxmox_virtual_environment_vm" "nodes" {
   }
 
   disk {
-    interface   = "scsi0"
-    file_format = "raw"
-    iothread    = true
-    discard     = "on"
-    size        = each.value.disk_size
+    interface    = "scsi0"
+    datastore_id = var.storage_pool
+    file_format  = "raw"
+    iothread     = true
+    discard      = "on"
+    size         = each.value.disk_size
   }
 
-  # --- Initialization (Cloud-init) ---
+  dynamic "disk" {
+    for_each = { for idx, d in each.value.data_disks : idx => d }
+    content {
+      interface    = "scsi${disk.key + 1}"
+      size         = disk.value.size
+      datastore_id = disk.value.datastore
+      file_format  = "raw"
+      iothread     = true
+      discard      = "on"
+    }
+  }
+
+  # Initialization (Cloud-init)
   initialization {
     ip_config {
       ipv4 {
@@ -58,7 +71,7 @@ resource "proxmox_virtual_environment_vm" "nodes" {
 
     user_account {
       username = "ubuntu"
-      keys     = [var.ssh_public_key]
+      keys     = [file(var.ssh_public_key_file)]
     }
   }
 

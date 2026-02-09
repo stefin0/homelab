@@ -1,31 +1,37 @@
-variable "proxmox_api_url" {
-  description = "The URL for the Proxmox API (e.g., https://192.168.x.x:8006/api2/json)"
+# Proxmox Provider Configuration
+variable "proxmox_url" {
   type        = string
+  description = "The full URL of the Proxmox API (e.g., https://192.168.1.10:8006/)."
 }
-variable "proxmox_api_token_id" {
-  description = "The Token ID (e.g., root@pam!terraform)"
+variable "proxmox_username" {
   type        = string
   sensitive   = true
+  description = "The username for authenticating with the Proxmox API."
 }
-variable "proxmox_api_token_secret" {
-  description = "The Secret UUID for the API Token"
+variable "proxmox_password" {
   type        = string
   sensitive   = true
+  description = "The password for the Proxmox user."
 }
 
-# --- Target Node Settings ---
-variable "target_node" {
-  description = "Proxmox node to deploy VMs onto"
+# Cluster & Template Settings
+variable "node_name" {
   type        = string
+  description = "The Proxmox node name where resources will be provisioned."
 }
 variable "template_vm_id" {
-  description = "The ID of the Packer template to clone"
   type        = number
+  description = "The ID of the Packer-generated template to clone."
+}
+variable "storage_pool" {
+  type        = string
+  default     = "local-lvm"
+  description = "The default storage pool for OS disks if not specified otherwise."
 }
 
-# --- Scalability Settings ---
+# VM Definitions (Scalability)
 variable "vms" {
-  description = "Map of VMs to create with their specific configurations"
+  description = "Map of VM definitions including hardware specs, networking, and extra data disks."
   type = map(object({
     id        = number
     cores     = number
@@ -34,10 +40,17 @@ variable "vms" {
     ip_cidr   = string
     gateway   = string
     tags      = list(string)
+    data_disks = list(object({
+      name      = string
+      size      = number
+      datastore = string
+      is_parity = bool
+    }))
   }))
 }
-# --- SSH ---
-variable "ssh_public_key" {
-  description = "Path to the public SSH key"
+
+# Access & Security
+variable "ssh_public_key_file" {
   type        = string
+  description = "The content (or path content) of the SSH public key to inject via Cloud-Init."
 }

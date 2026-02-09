@@ -1,8 +1,8 @@
-# --- Build Settings ---
+# Build Settings
 insecure_skip_tls_verify = true
 
-# --- VM Settings ---
-vm_name   = "ubuntu-server-24.04-golden"
-disk_size = "20G"
-cores     = 2
-memory    = 4096
+# VM Settings
+template_vm_name = "ubuntu-server-24.04-golden"
+disk_size        = "20G"
+cores            = 2
+memory           = 4096

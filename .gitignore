@@ -1,13 +1,11 @@
-# --- Security & Secrets ---
-.env
+# General
+homelab.env
 
-# --- General ---
-homelab.config
+# Packer
+images/variables.auto.pkrvars.hcl
 
-# --- Packer ---
-variables.auto.pkrvars.hcl
-
-# --- Terraform ---
-.terraform/
-*tfstate*
-variables.auto.tfvars
+# Terraform
+infrastructure/.terraform/
+infrastructure/terraform.tfstate
+infrastructure/terraform.tfstate.backup
+infrastructure/variables.auto.tfvars

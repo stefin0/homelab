@@ -1,3 +1,4 @@
+# docs: https://registry.terraform.io/providers/bpg/proxmox/latest/docs
 terraform {
   required_providers {
     proxmox = {
@@ -8,9 +9,10 @@ terraform {
 }
 
 provider "proxmox" {
-  endpoint  = var.proxmox_api_url
-  api_token = "${var.proxmox_api_token_id}=${var.proxmox_api_token_secret}"
-  insecure  = true
+  endpoint = var.proxmox_url
+  username = var.proxmox_username
+  password = var.proxmox_password
+  insecure = true
   ssh {
     agent    = true
     username = "root"
