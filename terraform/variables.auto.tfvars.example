@@ -1,32 +1,29 @@
 vms = {
   "infra-01" = {
-    id         = 101
-    cores      = 2
-    memory     = 2048
-    disk_size  = 20
-    ip_cidr    = "192.168.68.5/24"
-    gateway    = "192.168.68.1"
-    tags       = ["infra"]
-    data_disks = []
+    id        = 101
+    cores     = 2
+    memory    = 2048
+    disk_size = 20
+    ip_cidr   = "192.168.68.5/24"
+    gateway   = "192.168.68.1"
+    tags      = ["infra"]
   }
   "media-01" = {
-    id         = 102
-    cores      = 4
-    memory     = 4096
-    disk_size  = 20
-    ip_cidr    = "192.168.68.10/24"
-    gateway    = "192.168.68.1"
-    tags       = ["media"]
-    data_disks = []
+    id        = 102
+    cores     = 4
+    memory    = 4096
+    disk_size = 20
+    ip_cidr   = "192.168.68.10/24"
+    gateway   = "192.168.68.1"
+    tags      = ["media"]
   }
   "important-01" = {
-    id         = 103
-    cores      = 4
-    memory     = 4096
-    disk_size  = 20
-    ip_cidr    = "192.168.68.11/24"
-    gateway    = "192.168.68.1"
-    tags       = ["important"]
-    data_disks = []
+    id        = 103
+    cores     = 4
+    memory    = 4096
+    disk_size = 20
+    ip_cidr   = "192.168.68.11/24"
+    gateway   = "192.168.68.1"
+    tags      = ["important"]
   }
 }

@@ -40,11 +40,6 @@ variable "vms" {
     ip_cidr   = string
     gateway   = string
     tags      = list(string)
-    data_disks = list(object({
-      name      = string
-      size      = number
-      datastore = string
-    }))
   }))
 }
 
