@@ -2,10 +2,10 @@
 homelab.env
 
 # Packer
-images/variables.auto.pkrvars.hcl
+packer/variables.auto.pkrvars.hcl
 
 # Terraform
-infrastructure/.terraform/
-infrastructure/terraform.tfstate
-infrastructure/terraform.tfstate.backup
-infrastructure/variables.auto.tfvars
+terraform/.terraform/
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/variables.auto.tfvars

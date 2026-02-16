@@ -1,6 +1,9 @@
 - name: Bootstrap Proxmox Host
   hosts: all
   become: true
+  vars_files:
+    - host_storage.yml
 
   roles:
     - role: proxmox_bootstrap
+    - role: storage_snapraid_mergerfs

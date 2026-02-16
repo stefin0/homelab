@@ -1,0 +1,22 @@
+snapraid:
+  parity:
+    - id: /dev/disk/by-id/ata-VBOX_HARDDISK_VBef0b07aa-b8c95931
+      mount: /mnt/parity1
+  data:
+    - id: /dev/disk/by-id/ata-VBOX_HARDDISK_VBe86949a6-ea317fc4
+      mount: /mnt/disk1
+    - id: /dev/disk/by-id/ata-VBOX_HARDDISK_VB4be492fa-23123c24
+      mount: /mnt/disk2
+  content:
+    - /var/snapraid.content
+    - /mnt/disk1/.snapraid.content
+    - /mnt/disk2/.snapraid.content
+
+mergerfs:
+  mount: /mnt/storage
+  policy: epmfs
+  options:
+    - defaults
+    - allow_other
+    - use_ino
+    - category.create=epmfs

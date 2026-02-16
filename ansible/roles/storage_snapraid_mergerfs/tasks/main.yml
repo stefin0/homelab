@@ -1,0 +1,84 @@
+- name: Ensure mount points exist
+  ansible.builtin.file:
+    path: "{{ item.mount }}"
+    state: directory
+    mode: "0755"
+  loop: "{{ snapraid.parity + snapraid.data }}"
+
+- name: Ensure required packages installed
+  ansible.builtin.apt:
+    name:
+      - snapraid
+      - mergerfs
+      - nfs-kernel-server
+    state: present
+    update_cache: true
+
+- name: Create filesystems if missing (data + parity)
+  ansible.builtin.shell: >
+    blkid {{ item.id }} || mkfs.ext4 -m 0 -L {{item.mount | basename }} {{ item.id }}
+  changed_when: true
+  loop: "{{ snapraid.parity + snapraid.data }}"
+
+- name: Mount disks with fstab using by-id
+  ansible.builtin.mount:
+    path: "{{ item.mount }}"
+    src: "{{ item.id }}"
+    fstype: ext4
+    opts: defaults
+    state: mounted
+  loop: "{{ snapraid.parity + snapraid.data }}"
+
+- name: Write /etc/snapraid.conf
+  ansible.builtin.template:
+    src: snapraid.conf.j2
+    dest: /etc/snapraid.conf
+    mode: "0644"
+
+- name: Ensure mergerfs mountpoint exists
+  ansible.builtin.file:
+    path: "{{ mergerfs.mount }}"
+    state: directory
+    mode: "0755"
+
+- name: Mount mergerfs pool
+  ansible.builtin.mount:
+    path: "{{ mergerfs.mount }}"
+    src: "{{ snapraid.data | map(attribute='mount') | join(':') }}"
+    fstype: fuse.mergerfs
+    opts: "{{ mergerfs.options | join(',') }}"
+    state: mounted
+
+- name: Set ownership on mergerfs mount
+  ansible.builtin.file:
+    path: "{{ mergerfs.mount }}"
+    owner: "1000"
+    group: "1000"
+    recurse: false
+    state: directory
+
+- name: Export mergerfs via NFS
+  ansible.builtin.template:
+    src: exports.j2
+    dest: /etc/exports
+    mode: "0644"
+
+- name: Reload NFS exports
+  ansible.builtin.command: exportfs -ra
+  changed_when: true
+
+- name: Run snapraid sync
+  ansible.builtin.command: snapraid sync
+  async: 36000
+  poll: 60
+  changed_when: true
+  tags: [snapraid]
+
+- name: Install cron for daily snapraid sync
+  ansible.builtin.cron:
+    name: "snapraid daily sync"
+    hour: "3"
+    minute: "0"
+    job: "/usr/sbin/snapraid sync && /usr/sbin/snapraid scrub"
+    state: present
+  tags: [snapraid, cron]

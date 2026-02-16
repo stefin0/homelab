@@ -1,12 +1,8 @@
 include homelab.env
 
 export ISO_FILENAME := $(shell basename $(ISO_URL))
-
-ifneq ($(VM_PASSWORD),)
-	export PKR_VAR_vm_password_hash := $(shell openssl passwd -6 "$(VM_PASSWORD)")
-endif
-
-export
+export PROXMOX_URL := https://$(PROXMOX_HOST):8006/api2/json
+export PKR_VAR_vm_password_hash := $(shell openssl passwd -6 "$(VM_PASSWORD)")
 
 .PHONY: all bootstrap build deploy
 
@@ -14,14 +10,14 @@ all: bootstrap build deploy
 
 bootstrap:
 	@echo "--- Step 1: Bootstrapping Proxmox ---"
-	ansible-playbook -i "$(PROXMOX_HOST)," -u root configuration/bootstrap.yml \
+	ansible-playbook -i "$(PROXMOX_HOST)," -u root ansible/bootstrap.yml \
 		-e "iso_url=$(ISO_URL)" \
 		-e "iso_filename=$(ISO_FILENAME)" \
 		-e "iso_checksum=$(ISO_CHECKSUM)"
 
 build:
 	@echo "--- Step 2: Building Golden Image ---"
-	cd images && packer init . && packer build \
+	cd packer && packer init . && packer build \
 		-var "proxmox_url=$(PROXMOX_URL)" \
 		-var "proxmox_username=$(PROXMOX_USERNAME)" \
 		-var "proxmox_password=$(PROXMOX_PASSWORD)" \
@@ -31,11 +27,12 @@ build:
 		-var "ssh_private_key_file=$(SSH_PRIVATE_KEY_FILE)" \
 		-var "iso_checksum=$(ISO_CHECKSUM)" \
 		-var "iso_filename=$(ISO_FILENAME)" \
+		-var "nfs_server=$(PROXMOX_HOST)" \
 		.
 
 deploy:
 	@echo "--- Step 3: Deploying Infrastructure ---"
-	cd infrastructure && terraform init && terraform apply -auto-approve \
+	cd terraform && terraform init && terraform apply -auto-approve \
 		-var "proxmox_url=$(PROXMOX_URL)" \
 		-var "proxmox_username=$(PROXMOX_USERNAME)" \
 		-var "proxmox_password=$(PROXMOX_PASSWORD)" \

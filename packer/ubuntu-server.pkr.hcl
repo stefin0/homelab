@@ -55,6 +55,7 @@ source "proxmox-iso" "ubuntu-server" {
   http_content = {
     "/meta-data" = ""
     "/user-data" = templatefile("${path.root}/http/user-data.pkrtpl.hcl", {
+      nfs_server       = var.nfs_server,
       ssh_public_key   = file(var.ssh_public_key_file),
       vm_password_hash = var.vm_password_hash
     })

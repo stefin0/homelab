@@ -1,0 +1,12 @@
+{# docs: https://www.snapraid.it/manual #}
+{% for p in snapraid.parity %}
+parity {{ p.mount }}/snapraid.parity
+{% endfor %}
+
+{% for d in snapraid.data %}
+data d{{ loop.index }} {{ d.mount }}/
+{% endfor %}
+
+{% for c in snapraid.content %}
+content {{ c }}
+{% endfor %}

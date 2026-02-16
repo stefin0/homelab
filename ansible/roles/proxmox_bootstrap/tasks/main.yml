@@ -1,0 +1,59 @@
+# docs
+# - ansible: https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/index.html#plugins-in-ansible-builtin
+# - pve    : https://pve.proxmox.com/pve-docs/
+- name: Get 'local' storage configuration
+  ansible.builtin.command: pvesh get /storage/local --output-format json
+  register: storage_config
+  changed_when: false
+  check_mode: false
+  tags: [storage]
+
+- name: Enable snippets on local storage
+  ansible.builtin.command: pvesm set local --content backup,iso,vztmpl,snippets
+  changed_when: true
+  when: "'snippets' not in (storage_config.stdout | from_json).content"
+  tags: [storage]
+
+- name: Download Ubuntu ISO
+  ansible.builtin.get_url:
+    url: "{{ iso_url }}"
+    dest: "/var/lib/vz/template/iso/{{ iso_filename }}"
+    checksum: "{{ iso_checksum }}"
+    mode: "0644"
+  tags: [iso]
+
+- name: Restart chrony
+  ansible.builtin.service:
+    name: chrony
+    state: restarted
+  tags: [time]
+
+- name: Remove enterprise sources (pve-enterprise.sources)
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/pve-enterprise.sources
+    state: absent
+  tags: [apt]
+
+- name: Remove Ceph enterprise repo (ceph.sources)
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/ceph.sources
+    state: absent
+  tags: [apt]
+
+- name: Add Proxmox no-subscription repo (trixie)
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/pve-no-subscription.sources
+    mode: "0644"
+    content: |
+      Types: deb
+      URIs: http://download.proxmox.com/debian/pve
+      Suites: trixie
+      Components: pve-no-subscription
+      Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg
+  tags: [apt]
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  tags: [apt]

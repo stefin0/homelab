@@ -44,7 +44,6 @@ variable "vms" {
       name      = string
       size      = number
       datastore = string
-      is_parity = bool
     }))
   }))
 }
@@ -52,5 +51,5 @@ variable "vms" {
 # Access & Security
 variable "ssh_public_key_file" {
   type        = string
-  description = "The content (or path content) of the SSH public key to inject via Cloud-Init."
+  description = "The path to the SSH public key to inject via Cloud-Init."
 }

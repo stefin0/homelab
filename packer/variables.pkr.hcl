@@ -74,3 +74,9 @@ variable "vm_password_hash" {
   sensitive   = true
   description = "The hashed password for the default user (generated via 'openssl passwd -6')."
 }
+
+# NFS Configuration
+variable "nfs_server" {
+  type        = string
+  description = "The IP address of the NFS server (typically the Proxmox host)."
+}
