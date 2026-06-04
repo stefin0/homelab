@@ -5,7 +5,7 @@
 actual/actual-data/
 
 # Gluetun
-media/gluetun/servers.json
+media/gluetun/servers/*
 
 # Pi-hole
 pihole/pihole/etc/
@@ -22,9 +22,11 @@ traefik/dynamic/*
 config/
 data/
 db/
-pgdata/
-postgres/
 library/
+pgdata/
+postgres*/
+uploads/
+backup/
 
 # Logs
 *.log

@@ -23,5 +23,6 @@
 | qBittorrent | [LinuxServer.io](https://docs.linuxserver.io/images/docker-qbittorrent/) |
 | Radarr | [LinuxServer.io](https://docs.linuxserver.io/images/docker-radarr/) |
 | Sonarr | [LinuxServer.io](https://docs.linuxserver.io/images/docker-sonarr/) |
+| SparkyFitness | [Site](https://codewithcj.github.io/SparkyFitness/install/docker-compose) |
 | Stirling-PDF | [Site](https://docs.stirlingpdf.com/Installation/Docker%20Install) |
 | Whisper | [LinuxServer.io](https://docs.linuxserver.io/images/docker-faster-whisper/) |
