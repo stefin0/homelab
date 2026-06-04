@@ -1,24 +1,24 @@
 services:
   otbr:
-    image: openthread/border-router:latest
-    privileged: true
-    restart: always
+    image: ghcr.io/ownbee/hass-otbr-docker
     container_name: otbr
+    restart: always
+    network_mode: host
     cap_add:
       - NET_ADMIN
+      - SYS_ADMIN
     environment:
-      - OT_RCP_DEVICE=spinel+hdlc+uart:///dev/ttyUSB0?uart-baudrate=460800
-      - OT_INFRA_IF=enp2s0
-      - OT_THREAD_IF=wpan0
-      - OT_REST_LISTEN_ADDR=0.0.0.0
-      - OT_REST_LISTEN_PORT=8081
-      - OT_LOG_LEVEL=7
+      - DEVICE=/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_484fc339f411f011b33f0714773d9da9-if00-port0
+      - BAUDRATE=460800
+      - BACKBONE_IF=enp2s0
+      - OTBR_REST_PORT=8081
+      - OTBR_WEB_PORT=8084
+      - OTBR_LOG_LEVEL=info 
     devices:
-      - /dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_484fc339f411f011b33f0714773d9da9-if00-port0:/dev/ttyUSB0
+      - /dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_484fc339f411f011b33f0714773d9da9-if00-port0:/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_484fc339f411f011b33f0714773d9da9-if00-port0
       - /dev/net/tun:/dev/net/tun
     volumes:
-      - /var/lib/otbr:/data/
-    network_mode: host
+      - /var/lib/otbr:/data
 
   matter-server:
     image: ghcr.io/home-assistant-libs/python-matter-server:stable

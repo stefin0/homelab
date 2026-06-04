@@ -15,7 +15,7 @@
 | Matter Server | [Github](https://github.com/matter-js/python-matter-server/blob/main/docs/docker.md) |
 | Nextcloud | [LinuxServer.io](https://docs.linuxserver.io/images/docker-nextcloud/) |
 | Ollama | [Docker Hub](https://hub.docker.com/r/ollama/ollama) |
-| Open Thread Border Router | [Site](https://openthread.io/guides/border-router/build-docker) |
+| Open Thread Border Router | [Site](https://github.com/ownbee/hass-otbr-docker) |
 | Pi-hole | [Github](https://github.com/pi-hole/docker-pi-hole) |
 | Piper | [Docker Hub](https://hub.docker.com/r/rhasspy/wyoming-piper) |
 | Prowlarr | [LinuxServer.io](https://docs.linuxserver.io/images/docker-prowlarr/) |
