@@ -92,8 +92,8 @@ services:
       - TZ=${TZ}
     volumes:
       - ./qbittorrent/config:/config
-      - ./qbittorrent/downloading:/downloading
       - /mnt/storage_pool:/data
+      - ./qbittorrent/downloading:/data/downloading
     restart: unless-stopped
     network_mode: "service:gluetun"
 
@@ -105,6 +105,7 @@ services:
     volumes:
       - ./qbit_manage/config:/config:rw
       - /mnt/storage_pool:/data:rw
+      - ./qbittorrent/downloading:/data/downloading:rw
     environment:
       # Scheduler Configuration
       - QBT_RUN=false
@@ -116,7 +117,7 @@ services:
       - QBT_CAT_UPDATE=false
       - QBT_TAG_UPDATE=false
       - QBT_REM_UNREGISTERED=false
-      - QBT_REM_ORPHANED=false
+      - QBT_REM_ORPHANED=true
       - QBT_TAG_TRACKER_ERROR=false
       - QBT_TAG_NOHARDLINKS=true
       - QBT_SHARE_LIMITS=true
